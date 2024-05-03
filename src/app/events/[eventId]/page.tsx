@@ -1,10 +1,10 @@
 import EventDetails from '@/components/event-details';
-import InvestmentDrawer from '@/components/investment-drawer';
 import InvestmentsList from '@/components/investments-list';
 import Notice from '@/components/notice';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VendorsList from '@/components/vendors-list';
-import { getEvent } from '@/lib/api';
+import { getEvent } from '@/lib/events-api';
+import { getInvestmentsByEventId } from '@/lib/investments-api';
 
 type EventPageProps = {
   params: {
@@ -13,18 +13,21 @@ type EventPageProps = {
 };
 
 export default async function EventPage({ params }: EventPageProps) {
-  const event = await getEvent(params.eventId);
+  const [event, investments] = await Promise.all([
+    getEvent(params.eventId),
+    getInvestmentsByEventId(params.eventId),
+  ]);
 
   const {
     name,
     description,
-    investments,
     vendors,
     sponsors,
-    totalBids,
-    totalBidders,
-    highestBid,
+    total_invested,
+    total_investors,
+    highest_invested,
     image_url,
+    created_at,
   } = event;
 
   return (
@@ -39,11 +42,10 @@ export default async function EventPage({ params }: EventPageProps) {
       </div> */}
       <section className="w-full pt-12">
         <div className="px-3">
-          <InvestmentDrawer eventId={params.eventId} vendors={vendors} />
           <Tabs defaultValue="history" className="pt-10">
             <TabsList className="w-full">
               <TabsTrigger value="history">History</TabsTrigger>
-              <TabsTrigger value="vendors">Vendors</TabsTrigger>
+              <TabsTrigger value="vendors">Startups</TabsTrigger>
               <TabsTrigger value="details">Details</TabsTrigger>
             </TabsList>
             <TabsContent value="history">
@@ -74,9 +76,10 @@ export default async function EventPage({ params }: EventPageProps) {
                   name,
                   description,
                   sponsors,
-                  totalBids,
-                  totalBidders,
-                  highestBid,
+                  total_invested,
+                  total_investors,
+                  highest_invested,
+                  created_at,
                 }}
               />
             </TabsContent>

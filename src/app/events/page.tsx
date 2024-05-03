@@ -1,24 +1,8 @@
 import EventsList from '@/components/events-list';
 import SectionHeader from '@/components/section-header';
-import { getEvents } from '@/lib/api';
-import {
-  SESSION_KEY,
-  createSessionClient,
-  getLoggedInUser,
-} from '@/lib/appwrite';
-import { cookies } from 'next/headers';
+import { getLoggedInUser } from '@/lib/appwrite';
+import { getEvents } from '@/lib/events-api';
 import { redirect } from 'next/navigation';
-
-async function signOut() {
-  'use server';
-
-  const { account } = await createSessionClient();
-
-  cookies().delete(SESSION_KEY);
-  await account.deleteSession('current'); // logout on the current device only
-
-  redirect('/signup');
-}
 
 export default async function EventsPage() {
   const user = await getLoggedInUser();
@@ -26,7 +10,7 @@ export default async function EventsPage() {
   if (!user) redirect('/signup');
 
   const events = await getEvents();
-  const eventId = events[0].$id;
+  const eventId = events.find((event) => event.is_live)?.id;
 
   return (
     <>

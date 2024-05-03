@@ -1,4 +1,4 @@
-import MobileMenu from '@/components/mobile-menu';
+import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -16,11 +16,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // const events = await getEvents();
-  // const liveEvent = events.find((event) =>
-  //   isEventLive(event.start, event.end),
-  // )?.$id;
-
   return (
     <html lang="en">
       <body
@@ -28,6 +23,7 @@ export default async function RootLayout({
         suppressHydrationWarning={true}
       >
         <main>{children}</main>
+        <Toaster />
       </body>
     </html>
   );

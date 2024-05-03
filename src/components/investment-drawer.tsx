@@ -1,9 +1,11 @@
 'use client';
 
-import { Vendor } from '@/lib/types';
-import { Minus, Plus } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import investInVendor from '@/app/actions/investment-in-vendor';
+import { Event, Vendor } from '@/lib/types';
+import { formatDateLong } from '@/utils/date-time-utils';
+import { CirclePlus, Minus, Plus } from 'lucide-react';
 import { useState } from 'react';
+import ConfirmationDrawer from './confirmation-drawer';
 import { Button } from './ui/button';
 import {
   Drawer,
@@ -24,63 +26,73 @@ import {
   SelectValue,
 } from './ui/select';
 import { Slider } from './ui/slider';
-import ConfirmationDrawer from './confirmation-drawer';
+import { useToast } from './ui/use-toast';
+import { useRouter } from 'next/navigation';
 
 type BidDrawerProps = {
-  /* Current event id */
-  eventId: string;
+  /* Current event */
+  event: Event;
   /* List of vendor startups */
   vendors: Vendor[];
   /* Amount of available investment funds */
-  remainingInvestment?: number;
+  availableToInvest: number;
 };
 
 const multipliers = [100, 1000, 10000, 100000];
 const INITIAL_MULTIPLIER_VALUE = multipliers[0];
+const INITIAL_MULTIPLIER_BTN_INDEX = 0;
 
 const MIN_SPEND_LIMIT = 0;
 const MAX_SPEND_LIMIT = 1000000;
 
 const InvestmentDrawer = ({
-  eventId,
+  event,
   vendors,
-  remainingInvestment = MAX_SPEND_LIMIT,
+  availableToInvest = MAX_SPEND_LIMIT,
 }: BidDrawerProps) => {
-  const searchParams = useSearchParams();
-  const isDrawerQueryOpen = searchParams.get('drawer_open') === 'true';
-  const [open, setOpen] = useState(isDrawerQueryOpen);
-  const [availableToBid, setAvailableToBid] = useState(remainingInvestment);
-  const [currentBid, setCurrentBid] = useState(0);
-  const [selectedVendor, setSelectedVendor] = useState('');
+  const [open, setOpen] = useState(false);
+  const [maxInvestmentAvailable, setMaxInvestmentAvailable] = useState(
+    MAX_SPEND_LIMIT - availableToInvest,
+  );
+  const [currentInvestment, setCurrentInvestment] = useState(0);
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | undefined>(
+    undefined,
+  );
   const [multiplier, setMultiplierValue] = useState(INITIAL_MULTIPLIER_VALUE);
-  const [activeMultiplierIndex, setActiveMultiplierIndex] = useState(0);
+  const [activeMultiplierBtnIndex, setActiveMultiplierBtnIndex] = useState(
+    INITIAL_MULTIPLIER_BTN_INDEX,
+  );
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  // const [isSubmitActionClick, setIsSubmitActionClicked] = useState(false);
+  const { toast } = useToast();
+  const { refresh } = useRouter();
 
-  const onClick = (adjustment: number) => {
-    setCurrentBid(
-      Math.max(
-        MIN_SPEND_LIMIT,
-        Math.min(MAX_SPEND_LIMIT, currentBid + adjustment),
-      ),
+  const onValueAdjusterClick = (adjustment: number) => {
+    const total = Math.max(
+      MIN_SPEND_LIMIT,
+      Math.min(MAX_SPEND_LIMIT, currentInvestment + adjustment),
     );
+    setCurrentInvestment(total);
+    // setMaxInvestmentAvailable(maxInvestmentAvailable - total);
   };
 
   const onMultiplierValueChange = (value: number, index: number) => {
     setMultiplierValue(value);
-    setActiveMultiplierIndex(index);
+    setActiveMultiplierBtnIndex(index);
   };
 
   const onSliderValueChange = (value: number[]) => {
-    setCurrentBid(value[0]);
+    const total = value[0];
+    setCurrentInvestment(total);
+    // setMaxInvestmentAvailable(maxInvestmentAvailable - total);
   };
 
   const onBusinessSelectorValueChange = (value: string) => {
-    setSelectedVendor(value);
+    const vendor = vendors.find((vendor) => vendor.id === value);
+    setSelectedVendor(vendor);
   };
 
   const onConfirmationDrawerOpen = (value: boolean) => {
-    if (!!currentBid && !!selectedVendor && value) {
+    if (!!currentInvestment && !!selectedVendor && value) {
       setIsConfirmationOpen(true);
     }
   };
@@ -90,38 +102,63 @@ const InvestmentDrawer = ({
   };
 
   const resetValues = () => {
-    setCurrentBid(0);
-    setSelectedVendor('');
+    setCurrentInvestment(0);
+    setSelectedVendor(undefined);
     setMultiplierValue(INITIAL_MULTIPLIER_VALUE);
-    if (isDrawerQueryOpen) {
-      window.history.replaceState(null, '', `/${eventId}`);
-    }
+    setActiveMultiplierBtnIndex(0);
   };
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
+    const state = await investInVendor({
+      event,
+      amount: currentInvestment,
+      vendor_id: selectedVendor?.id as string,
+      vendor_name: selectedVendor?.name as string,
+    });
+
+    toast({
+      title: JSON.parse(state).message,
+      description: (
+        <>
+          <p className="text-muted-foreground">
+            Invested{' '}
+            <span className="text-foreground">${currentInvestment}</span> in{' '}
+            <span className="text-foreground">{selectedVendor?.name}</span>
+          </p>
+          <p className="text-muted-foreground"> at {formatDateLong()}</p>
+        </>
+      ),
+    });
+
     onConfirmationDrawerClose();
     resetValues();
     setOpen(false);
+    setTimeout(() => {
+      refresh();
+    }, 2000);
   };
 
   return (
     <Drawer dismissible={false} open={open} onOpenChange={setOpen}>
       <DrawerTrigger className="w-full" asChild>
-        <Button variant="outline">Place an Investment</Button>
+        <Button variant="ghost" className="h-12 w-full">
+          <CirclePlus className="h-6 w-6" />
+          <span className="sr-only">Invest in a Business</span>
+        </Button>
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader className="flex flex-col items-center">
             <DrawerTitle>Place an Investment</DrawerTitle>
             <DrawerDescription className="flex flex-col">
-              <p>Choose how much to invest in a business.</p>
-              <p>
+              <span>Choose how much to invest in a business.</span>
+              <span>
                 You have{' '}
                 <span className="font-semibold text-foreground">
-                  {availableToBid}
+                  {maxInvestmentAvailable}
                 </span>{' '}
                 available to bid.
-              </p>
+              </span>
             </DrawerDescription>
           </DrawerHeader>
           <div className="p-4 pb-0">
@@ -130,23 +167,23 @@ const InvestmentDrawer = ({
                 variant="outline"
                 size="icon"
                 className="h-8 w-8 shrink-0 rounded-full"
-                onClick={() => onClick(-multiplier)}
-                disabled={currentBid <= MIN_SPEND_LIMIT}
+                onClick={() => onValueAdjusterClick(-multiplier)}
+                disabled={currentInvestment <= MIN_SPEND_LIMIT}
               >
                 <Minus className="h-4 w-4" />
                 <span className="sr-only">Decrease</span>
               </Button>
               <div className="flex-1 text-center">
                 <div className="text-7xl font-bold tracking-tighter">
-                  {currentBid}
+                  {currentInvestment}
                 </div>
               </div>
               <Button
                 variant="outline"
                 size="icon"
                 className="h-8 w-8 shrink-0 rounded-full"
-                onClick={() => onClick(multiplier)}
-                disabled={currentBid >= MAX_SPEND_LIMIT}
+                onClick={() => onValueAdjusterClick(multiplier)}
+                disabled={currentInvestment >= MAX_SPEND_LIMIT}
               >
                 <Plus className="h-4 w-4" />
                 <span className="sr-only">Increase</span>
@@ -155,8 +192,8 @@ const InvestmentDrawer = ({
             <div className="mt-10 flex w-full">
               <Slider
                 defaultValue={[MIN_SPEND_LIMIT]}
-                value={[currentBid]}
-                max={availableToBid}
+                value={[currentInvestment]}
+                max={maxInvestmentAvailable}
                 step={multiplier}
                 onValueChange={onSliderValueChange}
               />
@@ -167,7 +204,7 @@ const InvestmentDrawer = ({
                   key={index}
                   onClick={() => onMultiplierValueChange(value, index)}
                   variant={
-                    activeMultiplierIndex === index ? 'secondary' : 'outline'
+                    activeMultiplierBtnIndex === index ? 'secondary' : 'outline'
                   }
                 >
                   x{value}
@@ -181,8 +218,8 @@ const InvestmentDrawer = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {vendors.map(({ $id, name }) => (
-                      <SelectItem key={$id} value={name}>
+                    {vendors.map(({ id, name }) => (
+                      <SelectItem key={id} value={id}>
                         {name}
                       </SelectItem>
                     ))}
@@ -193,7 +230,7 @@ const InvestmentDrawer = ({
           </div>
           <DrawerFooter>
             <ConfirmationDrawer
-              description={`You're about to invest \$${currentBid}. Are you sure?`}
+              description={`You're about to invest \$${currentInvestment}. Are you sure?`}
               isConfirmationOpen={isConfirmationOpen}
               setIsConfirmationOpen={onConfirmationDrawerOpen}
               onConfirmationSubmitAction={onSubmit}

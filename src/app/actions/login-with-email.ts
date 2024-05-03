@@ -1,14 +1,15 @@
 'use server';
 
-import { createAdminClient, ID, SESSION_KEY } from '@/lib/appwrite';
+import { createSessionClient, SESSION_KEY } from '@/lib/appwrite';
 import { setSessionCookie } from '@/utils/cookies';
 import { redirect } from 'next/navigation';
 import { userAuthFormSchema } from './auth-form-schema';
 
-export type FormState = {
+export type LoginFormState = {
   message: string;
   fields?: Record<string, string>;
   issues?: string[];
+  error?: boolean;
 };
 
 export default async function loginWithEmail(data: FormData) {
@@ -30,7 +31,7 @@ export default async function loginWithEmail(data: FormData) {
 
   try {
     const { email, password } = parsed.data;
-    const { account } = await createAdminClient();
+    const { account } = await createSessionClient();
     const session = await account.createEmailPasswordSession(email, password);
 
     setSessionCookie(SESSION_KEY, session);
@@ -38,15 +39,16 @@ export default async function loginWithEmail(data: FormData) {
     console.log(session);
     console.log({
       message: 'signin complete!',
-      fields: parsed.data,
     });
 
     redirect('/events');
   } catch (error) {
+    console.log(error);
     return JSON.stringify({
-      message: 'signin failed...',
+      message: 'No user found with this email.',
       fields: parsed.data,
       issues: [error],
+      error: true,
     });
   }
 }

@@ -2,8 +2,8 @@ import { buttonVariants } from '@/components/ui/button';
 import { getLoggedInUser } from '@/lib/appwrite';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import UserSignUpForm from '../../components/user-signup-form';
 import { cn } from '../../lib/utils';
-import UserSignUpForm from './user-signup-form';
 
 export default async function SignUpPage() {
   const user = await getLoggedInUser();
@@ -12,7 +12,7 @@ export default async function SignUpPage() {
 
   return (
     <div className="container relative grid h-screen flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <Link
+      {/* <Link
         href="/login"
         className={cn(
           buttonVariants({ variant: 'ghost' }),
@@ -20,7 +20,7 @@ export default async function SignUpPage() {
         )}
       >
         Login
-      </Link>
+      </Link> */}
       <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
         <div className="absolute inset-0 bg-zinc-900" />
         <div className="relative z-20 flex items-center text-lg font-medium">
@@ -53,10 +53,10 @@ export default async function SignUpPage() {
         <div className="mx-auto flex w-80 flex-col justify-center space-y-6">
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Create an account
+              Login to Start Investing
             </h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email below to create your account
+              Enter your email below to start investing
             </p>
           </div>
           <UserSignUpForm />

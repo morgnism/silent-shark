@@ -1,10 +1,9 @@
 import { buttonVariants } from '@/components/ui/button';
 import { getLoggedInUser } from '@/lib/appwrite';
-import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import UserLoginForm from '../../components/user-login-form';
 import { cn } from '../../lib/utils';
-import UserLoginForm from './user-login-form';
 
 export default async function SignUpPage() {
   const user = await getLoggedInUser();

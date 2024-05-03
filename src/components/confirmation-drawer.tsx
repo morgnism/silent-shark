@@ -42,7 +42,7 @@ const ConfirmationDrawer = ({
           <DrawerHeader className="flex flex-col items-center">
             <DrawerTitle>Confirm Investment</DrawerTitle>
             <DrawerDescription className="flex flex-col">
-              <p>{description}</p>
+              <span>{description}</span>
             </DrawerDescription>
           </DrawerHeader>
           <DrawerFooter>

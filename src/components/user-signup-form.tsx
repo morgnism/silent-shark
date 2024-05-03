@@ -18,12 +18,12 @@ import { useForm } from 'react-hook-form';
 import {
   UserAuthFormData,
   userAuthFormSchema,
-} from '../actions/auth-form-schema';
-import loginWithEmail from '../actions/login-with-email';
+} from '../app/actions/auth-form-schema';
+import signUpWithEmail from '../app/actions/signup-with-email';
 
 interface UserAuthFormProps extends HTMLAttributes<HTMLDivElement> {}
 
-const UserLoginForm = ({ className, ...props }: UserAuthFormProps) => {
+const UserSignUpForm = ({ className, ...props }: UserAuthFormProps) => {
   const { pending } = useFormStatus();
 
   const form = useForm<UserAuthFormData>({
@@ -38,7 +38,8 @@ const UserLoginForm = ({ className, ...props }: UserAuthFormProps) => {
     const formData = new FormData();
     formData.append('email', values.email);
     formData.append('password', values.password);
-    await loginWithEmail(formData);
+    formData.append('name', values.name);
+    await signUpWithEmail(formData);
   };
 
   return (
@@ -46,6 +47,19 @@ const UserLoginForm = ({ className, ...props }: UserAuthFormProps) => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid gap-2">
           <div className="grid gap-1">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="sr-only">Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"
@@ -75,7 +89,7 @@ const UserLoginForm = ({ className, ...props }: UserAuthFormProps) => {
           </div>
           <Button type="submit">
             {pending && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-            Sign In with Email
+            Sign Up with Email
           </Button>
         </div>
       </form>
@@ -83,4 +97,4 @@ const UserLoginForm = ({ className, ...props }: UserAuthFormProps) => {
   );
 };
 
-export default UserLoginForm;
+export default UserSignUpForm;

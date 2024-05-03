@@ -5,7 +5,7 @@ import { setSessionCookie } from '@/utils/cookies';
 import { redirect } from 'next/navigation';
 import { userAuthFormSchema } from './auth-form-schema';
 
-export type FormState = {
+export type SignUpFormState = {
   message: string;
   fields?: Record<string, string>;
   issues?: string[];
@@ -29,9 +29,9 @@ export default async function signUpWithEmail(data: FormData) {
   }
 
   try {
-    const { email, password } = parsed.data;
+    const { email, password, name } = parsed.data;
     const { account } = await createAdminClient();
-    await account.create(ID.unique(), email, password);
+    await account.create(ID.unique(), email, password, name);
     const session = await account.createEmailPasswordSession(email, password);
 
     setSessionCookie(SESSION_KEY, session);

@@ -18,13 +18,16 @@ import { useForm } from 'react-hook-form';
 import {
   UserAuthFormData,
   userAuthFormSchema,
-} from '../actions/auth-form-schema';
-import signUpWithEmail from '../actions/signup-with-email';
+} from '../app/actions/auth-form-schema';
+import loginWithEmail from '../app/actions/login-with-email';
+import { useToast } from './ui/use-toast';
+import { LoginFormState } from '@/app/actions/login-with-email';
 
 interface UserAuthFormProps extends HTMLAttributes<HTMLDivElement> {}
 
-const UserSignUpForm = ({ className, ...props }: UserAuthFormProps) => {
+const UserLoginForm = ({ className, ...props }: UserAuthFormProps) => {
   const { pending } = useFormStatus();
+  const { toast } = useToast();
 
   const form = useForm<UserAuthFormData>({
     resolver: zodResolver(userAuthFormSchema),
@@ -38,7 +41,15 @@ const UserSignUpForm = ({ className, ...props }: UserAuthFormProps) => {
     const formData = new FormData();
     formData.append('email', values.email);
     formData.append('password', values.password);
-    await signUpWithEmail(formData);
+    const res = await loginWithEmail(formData);
+    const state: LoginFormState = JSON.parse(res);
+
+    if (state.error) {
+      toast({
+        variant: 'destructive',
+        title: state.message,
+      });
+    }
   };
 
   return (
@@ -75,7 +86,7 @@ const UserSignUpForm = ({ className, ...props }: UserAuthFormProps) => {
           </div>
           <Button type="submit">
             {pending && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-            Sign Up with Email
+            Sign In with Email
           </Button>
         </div>
       </form>
@@ -83,4 +94,4 @@ const UserSignUpForm = ({ className, ...props }: UserAuthFormProps) => {
   );
 };
 
-export default UserSignUpForm;
+export default UserLoginForm;
