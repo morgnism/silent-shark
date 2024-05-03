@@ -10,7 +10,6 @@ export async function POST(request: Request) {
     const { account } = await createAdminClient();
     const session = await account.createEmailPasswordSession(email, password);
 
-    console.log(session);
     cookies().set(SESSION_KEY, session.secret, {
       httpOnly: true,
       secure: true,

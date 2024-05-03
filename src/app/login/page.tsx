@@ -1,9 +1,10 @@
 import { buttonVariants } from '@/components/ui/button';
 import { getLoggedInUser } from '@/lib/appwrite';
+import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { cn } from '../../lib/utils';
-import UserSignUpForm from './user-signup-form';
+import UserLoginForm from './user-login-form';
 
 export default async function SignUpPage() {
   const user = await getLoggedInUser();
@@ -13,13 +14,13 @@ export default async function SignUpPage() {
   return (
     <div className="container relative grid h-screen flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0">
       <Link
-        href="/login"
+        href="/signup"
         className={cn(
           buttonVariants({ variant: 'ghost' }),
           'absolute right-4 top-4 md:right-8 md:top-8',
         )}
       >
-        Login
+        Sign Up
       </Link>
       <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
         <div className="absolute inset-0 bg-zinc-900" />
@@ -53,13 +54,13 @@ export default async function SignUpPage() {
         <div className="mx-auto flex w-80 flex-col justify-center space-y-6">
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Create an account
+              Welcome Back
             </h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email below to create your account
+              Sign in to start investing in new startups
             </p>
           </div>
-          <UserSignUpForm />
+          <UserLoginForm />
         </div>
       </div>
     </div>

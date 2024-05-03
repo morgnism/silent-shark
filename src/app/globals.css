@@ -74,3 +74,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+.intro-label::after {
+  position: absolute;
+  content: '';
+  height: 3px;
+  width: 30px;
+  background-image: linear-gradient(
+    135deg,
+    var(--primary-color) 10%,
+    var(--secondary-color)
+  );
+  top: 50%;
+  left: calc(100% + 10px);
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
