@@ -1,10 +1,7 @@
 import { z } from 'zod';
 
 export const userAuthFormSchema = z.object({
-  name: z
-    .string()
-    .min(1, { message: 'This field has to be filled.' })
-    .email('This is not a valid name.'),
+  name: z.string().min(1, { message: 'This field has to be filled.' }),
   email: z
     .string()
     .min(1, { message: 'This field has to be filled.' })
